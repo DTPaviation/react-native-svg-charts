@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { Text, View } from 'react-native'
 import * as d3Scale from 'd3-scale'
 import * as array from 'd3-array'
-import Svg, { G, Text as SVGText } from 'react-native-svg'
+import Svg, { G, Text as SVGText, Line } from 'react-native-svg'
 
 class XAxis extends PureComponent {
     state = {
@@ -48,7 +48,7 @@ class XAxis extends PureComponent {
     }
 
     render() {
-        const { style, scale, data, xAccessor, formatLabel, numberOfTicks, svg, children, min, max } = this.props
+        const { style, scale, data, xAccessor,lineProps=null, formatLabel,contentInset, numberOfTicks, svg, children, min, max } = this.props
 
         const { height, width } = this.state
 
@@ -95,6 +95,7 @@ class XAxis extends PureComponent {
                                 width,
                             }}
                         >
+                           {lineProps && <Line x1={contentInset.left} x2={width}  y1={height-1} y2={height-1} stroke={svg.fill||'#FFF'} strokeWidth={1} {...lineProps} />}
                             <G>
                                 {React.Children.map(children, (child) => {
                                     return React.cloneElement(child, extraProps)
@@ -108,12 +109,14 @@ class XAxis extends PureComponent {
                                         return (
                                             <SVGText
                                                 textAnchor={'middle'}
-                                                originX={x(value)}
                                                 alignmentBaseline={'hanging'}
                                                 {...svg}
                                                 {...valueSvg}
                                                 key={index}
+                                                originX={x(value)}
                                                 x={x(value)}
+                                                originY={10}
+                                                y={10}
                                             >
                                                 {formatLabel(value, index)}
                                             </SVGText>
