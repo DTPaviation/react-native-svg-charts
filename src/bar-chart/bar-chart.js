@@ -3,8 +3,8 @@ import * as scale from 'd3-scale'
 import * as shape from 'd3-shape'
 import PropTypes from 'prop-types'
 import React, { PureComponent } from 'react'
-import { View } from 'react-native'
-import Svg from 'react-native-svg'
+import { View,TouchableWithoutFeedback,  } from 'react-native'
+import Svg ,{Text,Line} from 'react-native-svg'
 import Path from '../animated-path'
 
 class BarChart extends PureComponent {
@@ -121,7 +121,7 @@ class BarChart extends PureComponent {
     }
 
     render() {
-        const { data, animate, animationDuration, style, numberOfTicks, svg, horizontal, children } = this.props
+        const { data, animate, animationDuration, style, numberOfTicks, svg, horizontal, children, onBarPress } = this.props
 
         const { height, width } = this.state
 
@@ -172,14 +172,18 @@ class BarChart extends PureComponent {
                                 } = area
 
                                 return (
-                                    <Path
-                                        key={index}
-                                        {...svg}
-                                        {...barSvg}
-                                        d={path}
-                                        animate={animate}
-                                        animationDuration={animationDuration}
-                                    />
+                                    <TouchableWithoutFeedback onPress={onBarPress}>
+                                            <Path
+                                                key={index}
+                                                {...svg}
+                                                {...barSvg}
+                                                d={path}
+                                                animate={animate}
+                                                animationDuration={animationDuration}
+                                            >
+                                            </Path>
+                                    </TouchableWithoutFeedback>
+
                                 )
                             })}
                             {React.Children.map(children, (child) => {
