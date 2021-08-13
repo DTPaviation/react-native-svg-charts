@@ -1,9 +1,11 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import { Text, View } from 'react-native'
-import { Svg, G, Text as SVGText } from 'react-native-svg'
-import * as d3Scale from 'd3-scale'
+import { Svg, G, Text as SVGText, Line } from 'react-native-svg'
+// import * as d3Scale from 'd3-scale'
+import * as d3Scale from '../node_modules/d3-scale';
 import * as array from 'd3-array'
+import { responsiveWidth } from 'react-native-responsive-dimensions';
 
 class YAxis extends PureComponent {
     state = {
@@ -32,14 +34,15 @@ class YAxis extends PureComponent {
 
         const y = scale()
             .domain(domain)
-            .range([height - bottom, top])
+            .range([height -bottom, top])
 
         if (scale === d3Scale.scaleBand) {
+            console.log('hello scale scale band')
             // use index as domain identifier instead of value since
             // same value can occur at several places in dataPoints
             y
                 // set range top to bottom - we are not sorting on values in scaleBand
-                .range([top, height - bottom])
+                .range([top, height-10 - bottom])
                 .paddingInner([spacingInner])
                 .paddingOuter([spacingOuter])
 
@@ -51,7 +54,7 @@ class YAxis extends PureComponent {
     }
 
     render() {
-        const { style, data, scale, yAccessor, numberOfTicks, formatLabel, svg, children } = this.props
+        const { style, data, scale, yAccessor,labelX = '5%', lineProps=null,contentInset,numberOfTicks, formatLabel, svg, children } = this.props
 
         const { height, width } = this.state
 
@@ -70,8 +73,7 @@ class YAxis extends PureComponent {
         //invert range to support svg coordinate system
         const y = this.getY(domain)
 
-        const ticks = scale === d3Scale.scaleBand ? values : y.ticks(numberOfTicks)
-
+        const ticks =  values;
         const longestValue = ticks
             .map((value, index) => formatLabel(value, index))
             .reduce((prev, curr) => (prev.toString().length > curr.toString().length ? prev : curr), 0)
@@ -85,8 +87,8 @@ class YAxis extends PureComponent {
         }
 
         return (
-            <View style={[style]}>
-                <View style={{ flexGrow: 1 }} onLayout={(event) => this._onLayout(event)}>
+            <View style={[style,]}>
+                <View style={{ flexGrow: 1 ,}} onLayout={(event) => this._onLayout(event)}>
                     {/*invisible text to allow for parent resizing*/}
                     <Text
                         style={{
@@ -104,10 +106,11 @@ class YAxis extends PureComponent {
                                 position: 'absolute',
                                 top: 0,
                                 left: 0,
-                                height,
-                                width,
+                                height:height+30,
+                                width:responsiveWidth(100),
                             }}
                         >
+                            {lineProps&&<Line x1={contentInset.left} x2={contentInset.left} y1={1} y2={height-1} stroke={svg.fill||'#FFF'} strokeWidth={1} {...lineProps}/>}
                             <G>
                                 {React.Children.map(children, (child) => {
                                     return React.cloneElement(child, extraProps)
@@ -119,12 +122,14 @@ class YAxis extends PureComponent {
                                         return (
                                             <SVGText
                                                 originY={y(value)}
-                                                textAnchor={'middle'}
-                                                x={'50%'}
-                                                alignmentBaseline={'middle'}
-                                                {...svg}
+                                                x={labelX}
+                                                alignmentBaseline={'center'}
+                                                fontSize={8}
                                                 key={y(value)}
+                                                textAnchor={'start'}
                                                 y={y(value)}
+                                                {...svg}
+
                                             >
                                                 {formatLabel(value, index, ticks.length)}
                                             </SVGText>
