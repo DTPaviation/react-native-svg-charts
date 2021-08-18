@@ -3,8 +3,8 @@ import * as scale from 'd3-scale'
 import * as shape from 'd3-shape'
 import PropTypes from 'prop-types'
 import React, { PureComponent } from 'react'
-import { View,TouchableWithoutFeedback,  } from 'react-native'
-import Svg ,{Text,Line} from 'react-native-svg'
+import { View, TouchableWithoutFeedback, } from 'react-native'
+import Svg, { Text, Line } from 'react-native-svg'
 import Path from '../animated-path'
 
 class BarChart extends PureComponent {
@@ -72,6 +72,7 @@ class BarChart extends PureComponent {
         return scale
             .scaleLinear()
             .domain(domain)
+            .nice()
             .range([height - bottom, top])
             .clamp(clamp)
     }
@@ -172,16 +173,16 @@ class BarChart extends PureComponent {
                                 } = area
 
                                 return (
-                                    <TouchableWithoutFeedback onPress={onBarPress}>
-                                            <Path
-                                                key={index}
-                                                {...svg}
-                                                {...barSvg}
-                                                d={path}
-                                                animate={animate}
-                                                animationDuration={animationDuration}
-                                            >
-                                            </Path>
+                                    <TouchableWithoutFeedback onPress={() => { if (onBarPress) { onBarPress(index) } }}>
+                                        <Path
+                                            key={index}
+                                            {...svg}
+                                            {...barSvg}
+                                            d={path}
+                                            animate={animate}
+                                            animationDuration={animationDuration}
+                                        >
+                                        </Path>
                                     </TouchableWithoutFeedback>
 
                                 )
