@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
-import { Text, View } from 'react-native'
+import { Text, TouchableWithoutFeedback, View } from 'react-native'
 import * as d3Scale from 'd3-scale'
 import * as array from 'd3-array'
 import Svg, { G, Text as SVGText, Line } from 'react-native-svg'
@@ -48,9 +48,10 @@ class XAxis extends PureComponent {
     }
 
     render() {
-        const { style, scale, data, xAccessor,lineProps=null, formatLabel,contentInset, numberOfTicks, svg, children, min, max } = this.props
+        const { style, scale, data, onBarPress, xAccessor, lineProps = null, formatLabel, contentInset, numberOfTicks, svg, children, min, max } = this.props
 
         const { height, width } = this.state
+        const { textHorizontalOffset = 0, textVerticalOffset = 0 } = contentInset
 
         if (data.length === 0) {
             return <View style={style} />
@@ -61,8 +62,7 @@ class XAxis extends PureComponent {
         const domain = scale === d3Scale.scaleBand ? values : [min || extent[0], max || extent[1]]
 
         const x = this._getX(domain)
-        const ticks = numberOfTicks ? x.ticks(numberOfTicks) : values
-
+        let ticks = numberOfTicks ? x.ticks(numberOfTicks) : values
         const extraProps = {
             x,
             ticks,
@@ -72,7 +72,7 @@ class XAxis extends PureComponent {
         }
 
         return (
-            <View style={style}>
+            <View style={[style, { height: 200 }]}>
                 <View style={{ flexGrow: 1 }} onLayout={(event) => this._onLayout(event)}>
                     {/*invisible text to allow for parent resizing*/}
                     <Text
@@ -91,35 +91,38 @@ class XAxis extends PureComponent {
                                 position: 'absolute',
                                 top: 0,
                                 left: 0,
-                                height,
+                                height: 200,
                                 width,
                             }}
                         >
-                           {lineProps && <Line x1={contentInset.left} x2={width}  y1={height-1} y2={height-1} stroke={svg.fill||'#FFF'} strokeWidth={1} {...lineProps} />}
+                            {lineProps && <Line x1={contentInset.left} x2={width} y1={height - 1} y2={height - 1} stroke={svg.fill || '#FFF'} strokeWidth={1} {...lineProps} />}
                             <G>
                                 {React.Children.map(children, (child) => {
                                     return React.cloneElement(child, extraProps)
                                 })}
                                 {// don't render labels if width isn't measured yet,
-                                // causes rendering issues
-                                width > 0 &&
+                                    // causes rendering issues
+                                    width > 0 &&
                                     ticks.map((value, index) => {
                                         const { svg: valueSvg = {} } = data[index] || {}
 
                                         return (
-                                            <SVGText
-                                                textAnchor={'middle'}
-                                                alignmentBaseline={'hanging'}
-                                                {...svg}
-                                                {...valueSvg}
-                                                key={index}
-                                                originX={x(value)}
-                                                x={x(value)}
-                                                originY={10}
-                                                y={10}
-                                            >
-                                                {formatLabel(value, index)}
-                                            </SVGText>
+                                            <TouchableWithoutFeedback
+                                                onPress={() => { if (onBarPress) { onBarPress(index) } }}>
+                                                <SVGText
+                                                    textAnchor={'middle'}
+                                                    alignmentBaseline={'hanging'}
+                                                    {...svg}
+                                                    {...valueSvg}
+                                                    key={index}
+                                                    originX={x(value) + textHorizontalOffset}
+                                                    x={x(value) + textHorizontalOffset}
+                                                    originY={textVerticalOffset}
+                                                    y={textVerticalOffset}
+                                                >
+                                                    {formatLabel(value, index)}
+                                                </SVGText>
+                                            </TouchableWithoutFeedback>
                                         )
                                     })}
                             </G>
