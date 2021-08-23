@@ -36,7 +36,7 @@ class BarChart extends PureComponent {
         if (horizontal) {
             return scale
                 .scaleLinear()
-                .domain(domain)
+                .domain(domain).nice()
                 .range([left, width - right])
                 .clamp(clamp)
         }
@@ -122,7 +122,7 @@ class BarChart extends PureComponent {
     }
 
     render() {
-        const { data, animate, animationDuration, style, numberOfTicks, svg, horizontal, children, onBarPress } = this.props
+        const { data, animate, animationDuration,disabled, style, numberOfTicks, svg, horizontal, children, onBarPress } = this.props
 
         const { height, width } = this.state
 
@@ -173,7 +173,7 @@ class BarChart extends PureComponent {
                                 } = area
 
                                 return (
-                                    <TouchableWithoutFeedback onPress={() => { if (onBarPress) { onBarPress(index) } }}>
+                                    <TouchableWithoutFeedback disabled={disabled} onPress={() => { if (onBarPress) { onBarPress(index) } }}>
                                         <Path
                                             key={index}
                                             {...svg}
