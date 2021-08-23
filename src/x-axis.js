@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react'
-import PropTypes from 'prop-types'
+import PropTypes, { number } from 'prop-types'
 import { Text, TouchableWithoutFeedback, View } from 'react-native'
 import * as d3Scale from 'd3-scale'
 import * as array from 'd3-array'
@@ -34,7 +34,7 @@ class XAxis extends PureComponent {
         const { width } = this.state
 
         const x = scale()
-            .domain(domain)
+            .domain(domain).nice()
             .range([left, width - right])
 
         if (scale === d3Scale.scaleBand) {
@@ -48,7 +48,7 @@ class XAxis extends PureComponent {
     }
 
     render() {
-        const { style, scale, data, onBarPress, xAccessor, lineProps = null, formatLabel, contentInset, numberOfTicks, svg, children, min, max } = this.props
+        const { style, scale,ticksAreValues, data,  xAccessor, lineProps = null, formatLabel, contentInset, numberOfTicks=null, svg, children, min, max } = this.props
 
         const { height, width } = this.state
         const { textHorizontalOffset = 0, textVerticalOffset = 0 } = contentInset
@@ -59,7 +59,7 @@ class XAxis extends PureComponent {
 
         const values = data.map((item, index) => xAccessor({ item, index }))
         const extent = array.extent(values)
-        const domain = scale === d3Scale.scaleBand ? values : [min || extent[0], max || extent[1]]
+        const domain = scale === d3Scale.scaleBand ? values : [ min > -999 ? min : extent[0], max || extent[1]]
 
         const x = this._getX(domain)
         let ticks = numberOfTicks ? x.ticks(numberOfTicks) : values
@@ -70,7 +70,6 @@ class XAxis extends PureComponent {
             height,
             formatLabel,
         }
-
         return (
             <View style={[style, { height: 200 }]}>
                 <View style={{ flexGrow: 1 }} onLayout={(event) => this._onLayout(event)}>
@@ -91,7 +90,7 @@ class XAxis extends PureComponent {
                                 position: 'absolute',
                                 top: 0,
                                 left: 0,
-                                height: 200,
+                                height:200,
                                 width,
                             }}
                         >
@@ -105,11 +104,8 @@ class XAxis extends PureComponent {
                                     width > 0 &&
                                     ticks.map((value, index) => {
                                         const { svg: valueSvg = {} } = data[index] || {}
-
                                         return (
-                                            <TouchableWithoutFeedback
-                                                onPress={() => { if (onBarPress) { onBarPress(index) } }}>
-                                                <SVGText
+                                            <SVGText
                                                     textAnchor={'middle'}
                                                     alignmentBaseline={'hanging'}
                                                     {...svg}
@@ -122,7 +118,6 @@ class XAxis extends PureComponent {
                                                 >
                                                     {formatLabel(value, index)}
                                                 </SVGText>
-                                            </TouchableWithoutFeedback>
                                         )
                                     })}
                             </G>
