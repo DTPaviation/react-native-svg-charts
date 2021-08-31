@@ -5,6 +5,8 @@ import * as d3Scale from 'd3-scale'
 import * as array from 'd3-array'
 import Svg, { G, Text as SVGText, Line } from 'react-native-svg'
 
+export const xAxisLocations = { };
+
 class XAxis extends PureComponent {
     state = {
         width: 0,
@@ -46,21 +48,22 @@ class XAxis extends PureComponent {
 
         return x
     }
-
+    
+   
     render() {
-        const { style, scale,ticksAreValues, data,  xAccessor, lineProps = null, formatLabel, contentInset, numberOfTicks=null, svg, children, min, max } = this.props
+        const { style, scale,  useXAxisLocations = false,
+             data, xAccessor, lineProps = null, formatLabel, contentInset, numberOfTicks = null, svg, children, min, max } = this.props
 
         const { height, width } = this.state
-        const { textHorizontalOffset = 0, textVerticalOffset = 0 } = contentInset
+        const { textHorizontalOffset = 0, textVerticalOffset = 0,  } = contentInset
 
         if (data.length === 0) {
             return <View style={style} />
         }
-
         const values = data.map((item, index) => xAccessor({ item, index }))
         const extent = array.extent(values)
-        const domain = scale === d3Scale.scaleBand ? values : [ min > -999 ? min : extent[0], max || extent[1]]
-
+        const domain = scale === d3Scale.scaleBand ? values : [min > -999 ? min : extent[0], max || extent[1]]
+        
         const x = this._getX(domain)
         let ticks = numberOfTicks ? x.ticks(numberOfTicks) : values
         const extraProps = {
@@ -71,7 +74,7 @@ class XAxis extends PureComponent {
             formatLabel,
         }
         return (
-            <View style={[style, { height: 200 }]}>
+            <View style={[style, { height }]}>
                 <View style={{ flexGrow: 1 }} onLayout={(event) => this._onLayout(event)}>
                     {/*invisible text to allow for parent resizing*/}
                     <Text
@@ -90,7 +93,7 @@ class XAxis extends PureComponent {
                                 position: 'absolute',
                                 top: 0,
                                 left: 0,
-                                height:200,
+                                height,
                                 width,
                             }}
                         >
@@ -103,21 +106,30 @@ class XAxis extends PureComponent {
                                     // causes rendering issues
                                     width > 0 &&
                                     ticks.map((value, index) => {
-                                        const { svg: valueSvg = {} } = data[index] || {}
+                                        const { svg: valueSvg = { } } = data[index] || { }
+                                        let xLocation = 0;
+                                        if (useXAxisLocations && xAxisLocations.hasOwnProperty('x' + index))
+                                            xLocation = xAxisLocations['x' + index] - (xAxisLocations['x0'] / 2)
+                                        else
+                                            xLocation = x(value)
+                                        xLocation = xLocation + textHorizontalOffset
+
                                         return (
                                             <SVGText
-                                                    textAnchor={'middle'}
-                                                    alignmentBaseline={'hanging'}
-                                                    {...svg}
-                                                    {...valueSvg}
-                                                    key={index}
-                                                    originX={x(value) + textHorizontalOffset}
-                                                    x={x(value) + textHorizontalOffset}
-                                                    originY={textVerticalOffset}
-                                                    y={textVerticalOffset}
-                                                >
-                                                    {formatLabel(value, index)}
-                                                </SVGText>
+                                                textAnchor={'middle'}
+                                                alignmentBaseline={'hanging'}
+                                                {...svg}
+                                                {...valueSvg}
+                                                key={index}
+                                                originX={x(value) + textHorizontalOffset}
+                                                x={x(value) + textHorizontalOffset}
+                                                originX={xLocation}
+                                                x={xLocation}
+                                                originY={textVerticalOffset}
+                                                y={textVerticalOffset}
+                                            >
+                                                {formatLabel(value, index)}
+                                            </SVGText>
                                         )
                                     })}
                             </G>
@@ -149,8 +161,8 @@ XAxis.propTypes = {
 XAxis.defaultProps = {
     spacingInner: 0.05,
     spacingOuter: 0.05,
-    contentInset: {},
-    svg: {},
+    contentInset: { },
+    svg: { },
     xAccessor: ({ index }) => index,
     scale: d3Scale.scaleLinear,
     formatLabel: (value) => value,

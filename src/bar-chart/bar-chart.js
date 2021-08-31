@@ -5,6 +5,7 @@ import PropTypes from 'prop-types'
 import React, { PureComponent } from 'react'
 import { View, TouchableWithoutFeedback, } from 'react-native'
 import Svg, { Text, Line } from 'react-native-svg'
+import { xAxisLocations } from 'react-native-svg-charts/src/x-axis'
 import Path from '../animated-path'
 
 class BarChart extends PureComponent {
@@ -78,31 +79,40 @@ class BarChart extends PureComponent {
     }
 
     calcAreas(x, y) {
-        const { horizontal, data, yAccessor } = this.props
+        const { horizontal, data, yAccessor,} = this.props
 
         const values = data.map((item) => yAccessor({ item }))
 
         if (horizontal) {
-            return data.map((bar, index) => ({
-                bar,
-                path: shape
-                    .area()
-                    .y((value, _index) => (_index === 0 ? y(index) : y(index) + y.bandwidth()))
-                    .x0(x(0))
-                    .x1((value) => x(value))
-                    .defined((value) => typeof value === 'number')([values[index], values[index]]),
-            }))
+            return data.map((bar, index) => {
+                return {
+                    bar,
+                    path: shape
+                        .area()
+                        .y((value, _index) => (_index === 0 ? y(index) : y(index) + y.bandwidth()))
+                        .x0(x(0))
+                        .x1((value) => x(value))
+                        .defined((value) => typeof value === 'number')([values[index], values[index]]),
+                }
+            })
         }
 
-        return data.map((bar, index) => ({
-            bar,
-            path: shape
+        let final = data.map((bar, index) => {
+            const result = { }
+            result.bar = bar;
+            result.path = shape
                 .area()
                 .y0(y(0))
                 .y1((value) => y(value))
-                .x((value, _index) => (_index === 0 ? x(index) : x(index) + x.bandwidth()))
-                .defined((value) => typeof value === 'number')([values[index], values[index]]),
-        }))
+                .x((value, _index) => {
+                    value = _index === 0 ? x(index) : x(index) + x.bandwidth();
+                    result.x = value
+                    xAxisLocations['x'+index] = value
+                    return value;
+                }).defined((value) => typeof value === 'number')([values[index], values[index]])
+            return result;
+        })
+        return final;
     }
 
     calcExtent() {
@@ -122,7 +132,7 @@ class BarChart extends PureComponent {
     }
 
     render() {
-        const { data, animate, animationDuration,disabled, style, numberOfTicks, svg, horizontal, children, onBarPress } = this.props
+        const { data, animate, animationDuration, disabled, style, numberOfTicks, svg, horizontal, children, onBarPress } = this.props
 
         const { height, width } = this.state
 
@@ -145,7 +155,6 @@ class BarChart extends PureComponent {
         const areas = this.calcAreas(x, y).filter(
             (area) => area.bar !== null && area.bar !== undefined && area.path !== null
         )
-
         const extraProps = {
             x,
             y,
@@ -168,7 +177,7 @@ class BarChart extends PureComponent {
                             })}
                             {areas.map((area, index) => {
                                 const {
-                                    bar: { svg: barSvg = {} },
+                                    bar: { svg: barSvg = { } },
                                     path,
                                 } = area
 
@@ -226,9 +235,9 @@ BarChart.propTypes = {
 BarChart.defaultProps = {
     spacingInner: 0.05,
     spacingOuter: 0.05,
-    contentInset: {},
+    contentInset: { },
     numberOfTicks: 10,
-    svg: {},
+    svg: { },
     yAccessor: ({ item }) => item,
 }
 
